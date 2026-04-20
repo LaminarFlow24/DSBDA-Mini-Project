@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
+import plotly.express as px
 
 st.set_page_config(page_title="COVID Dashboard", layout="wide")
 
@@ -73,21 +74,20 @@ st.subheader("📈 Vaccination Trend Over Time")
 
 trend_df = filtered_df.dropna(subset=['First Dose Administered'])
 
-fig1, ax1 = plt.subplots()
-ax1.plot(trend_df['Updated On'], trend_df['First Dose Administered'])
-ax1.set_xlabel("Date")
-ax1.set_ylabel("First Dose")
-st.pyplot(fig1)
+fig1 = px.line(trend_df, x='Updated On', y='First Dose Administered', 
+               title="First Dose Vaccination Trend",
+               labels={"Updated On": "Date", "First Dose Administered": "First Dose"})
+st.plotly_chart(fig1, use_container_width=True)
 
 # ---------------- 📊 TOP 10 ----------------
 st.subheader("📊 Top 10 States (First Dose)")
 
 top10 = latest_df.sort_values(by='First Dose Administered', ascending=False).head(10)
 
-fig2, ax2 = plt.subplots()
-ax2.barh(top10['State'], top10['First Dose Administered'])
-ax2.invert_yaxis()
-st.pyplot(fig2)
+fig2 = px.bar(top10, x='First Dose Administered', y='State', orientation='h',
+              title="Top 10 States by First Dose")
+fig2.update_layout(yaxis={'categoryorder': 'total ascending'})
+st.plotly_chart(fig2, use_container_width=True)
 
 # ---------------- 🥧 GENDER ----------------
 st.subheader("🥧 Gender Distribution")
@@ -95,9 +95,12 @@ st.subheader("🥧 Gender Distribution")
 male_total = filtered_df['Male (Doses Administered)'].sum()
 female_total = filtered_df['Female (Doses Administered)'].sum()
 
-fig3, ax3 = plt.subplots()
-ax3.pie([male_total, female_total], labels=['Male', 'Female'], autopct='%1.1f%%')
-st.pyplot(fig3)
+gender_data = pd.DataFrame({
+    'Gender': ['Male', 'Female'],
+    'Total': [male_total, female_total]
+})
+fig3 = px.pie(gender_data, values='Total', names='Gender', title="Gender Distribution")
+st.plotly_chart(fig3, use_container_width=True)
 
 # ---------------- 📉 GAP ANALYZER ----------------
 st.subheader("📉 Vaccination Gap Analyzer")
@@ -106,10 +109,10 @@ latest_df['Gap'] = latest_df['First Dose Administered'] - latest_df['Second Dose
 
 gap_df = latest_df.sort_values(by='Gap', ascending=False).head(10)
 
-fig4, ax4 = plt.subplots()
-ax4.barh(gap_df['State'], gap_df['Gap'])
-ax4.invert_yaxis()
-st.pyplot(fig4)
+fig4 = px.bar(gap_df, x='Gap', y='State', orientation='h',
+              title="States with Highest Vaccination Gap (First vs Second Dose)")
+fig4.update_layout(yaxis={'categoryorder': 'total ascending'})
+st.plotly_chart(fig4, use_container_width=True)
 
 st.info("👉 States with high gap = lagging in full vaccination")
 
